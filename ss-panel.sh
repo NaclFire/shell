@@ -7,36 +7,52 @@ install_ss_panel_mod_v3(){
 	yum update -y nss curl libcurl 
 	num=$1
 	if [ "${num}" != "1" ]; then
-  	  wget -c --no-check-certificate https://raw.githubusercontent.com/NaclFire/ss-panel-v3/master/lnmp1.4.zip && unzip lnmp1.4.zip && rm -rf lnmp1.4.zip && cd lnmp1.4 && chmod +x install.sh && ./install.sh lnmp
+  	  wget -c --no-check-certificate https://raw.githubusercontent.com/NaclFire/ss-panel-v3-mod_Uim/master/lnmp1.6.zip && unzip lnmp1.6.zip && rm -rf lnmp1.6.zip && cd lnmp1.6 && chmod +x install.sh && ./install.sh lnmp
 	fi
 	cd /home/wwwroot/
-	cp -r default/phpmyadmin/ .
+	# 移动phpmyadmin
+	mv default/phpmyadmin/ .
 	cd default
 	rm -rf index.html
-	git clone https://github.com/NaclFire/mod.git tmp && mv tmp/.git . && rm -rf tmp && git reset --hard
-	cp config/.config.php.example config/.config.php
+	#克隆项目
+	git clone -b master https://github.com/NaclFire/SSPanel-Uim.git tmp && mv tmp/.git . && rm -rf tmp && git reset --hard
+	git config core.filemode false
+	wget https://getcomposer.org/installer -O composer.phar
+	#复制配置文件
+	cp config/.config.example.php config/.config.php
+	#移除防跨站攻击(open_basedir)
+	cd /home/wwwroot/default
+	chattr -i public/.user.ini
 	chattr -i .user.ini
-	mv .user.ini public
+	rm -rf .user.ini
+	rm -rf public/.user.ini
+	#下载配置文件
+	wget -N -P  /usr/local/nginx/conf/ --no-check-certificate https://raw.githubusercontent.com/NaclFire/ss-panel-v3-mod_Uim/master/nginx.conf
+	wget -N -P /usr/local/php/etc/ --no-check-certificate https://raw.githubusercontent.com/NaclFire/ss-panel-v3-mod_Uim/master/php.ini
+	service nginx restart
+	/etc/init.d/php-fpm restart
+	IPAddress=`wget http://whatismyip.akamai.com/ -O - -q ; echo`;
+	#导入数据库
+	mysql -uroot -proot -e"create database sspanel;" 
+	mysql -uroot -proot -e"use sspanel;" 
+	mysql -uroot -proot sspanel < /home/wwwroot/default/sql/glzjin_all.sql
+	cd /home/wwwroot/default
+	#安装composer
+	php composer.phar
+	php composer.phar install
+	#设置文件权限
 	chown -R root:root *
 	chmod -R 777 *
 	chown -R www:www storage
-	chattr +i public/.user.ini
-	wget -N -P  /usr/local/nginx/conf/ --no-check-certificate https://raw.githubusercontent.com/NaclFire/ss-panel-v3/master/nginx.conf
-	service nginx restart
-	IPAddress=`wget http://whatismyip.akamai.com/ -O - -q ; echo`;
-	sed -i "s#103.74.192.11#${IPAddress}#" /home/wwwroot/default/sql/sspanel.sql
-	mysql -uroot -proot -e"create database sspanel;" 
-	mysql -uroot -proot -e"use sspanel;" 
-	mysql -uroot -proot sspanel < /home/wwwroot/default/sql/sspanel.sql
-	cd /home/wwwroot/default
-	php -n xcat initdownload
+	php xcat syncusers
 	php xcat initQQWry
+	php xcat resetTraffic
+	php xcat initdownload
 	yum -y install vixie-cron crontabs
-	echo '*/20 * * * * /usr/sbin/ntpdate pool.ntp.org > /dev/null 2>&1' >> /etc/crontab
-	echo '30 22 * * * php /home/wwwroot/default/xcat sendDiaryMail' >> /etc/crontab
-	echo '0 0 * * * php /home/wwwroot/default/xcat dailyjob' >> /etc/crontab
-	#echo '*/1 * * * * php /home/wwwroot/default/xcat checkjob' >> /etc/crontab
-	#echo '1 * * * * root supervisorctl restart ssr'>> /etc/crontab
+	echo '30 22 * * * php /www/wwwroot/default/xcat sendDiaryMail' >> /etc/crontab
+	echo '0 0 * * * php -n /www/wwwroot/default/xcat dailyjob' >> /etc/crontab
+	echo '*/1 * * * * php /www/wwwroot/default/xcat checkjob' >> /etc/crontab
+	echo '*/1 * * * * php /www/wwwroot/default/xcat syncnode' >> /etc/crontab
 	crontab /etc/crontab
 }
 Libtest(){
