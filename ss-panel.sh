@@ -69,7 +69,7 @@ echo "#############################################################"
 echo
 num=$1
 if [ "${num}" == "1" ]; then
-    install_panel_and_node 1
+    install_ss_panel_mod_v3 1
 else
     stty erase '^H' && read -p " Please enter number:" num
 		case "$num" in
