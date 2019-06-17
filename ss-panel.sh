@@ -31,9 +31,9 @@ install_ss_panel_mod_v3(){
 	service nginx restart
 	/etc/init.d/php-fpm restart
 	#导入数据库
-	mysql -uroot -proot -e"create database sspanel;" 
-	mysql -uroot -proot -e"use sspanel;" 
-	mysql -uroot -proot sspanel < /home/wwwroot/default/sql/glzjin_all.sql
+	mysql -uroot -psspanel -e"create database sspanel;" 
+	mysql -uroot -psspanel -e"use sspanel;" 
+	mysql -uroot -psspanel sspanel < /home/wwwroot/default/sql/glzjin_all.sql
 	cd /home/wwwroot/default
 	#安装composer
 	php composer.phar
