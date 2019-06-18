@@ -22,9 +22,8 @@ install_ss_panel_mod_v3(){
 	cp config/.config.example.php config/.config.php
 	#移除防跨站攻击(open_basedir)
 	cd /home/wwwroot/default
-	chattr -i public/.user.ini
 	chattr -i .user.ini
-	rm -rf .user.ini
+	mv .user.ini public
 	#下载配置文件
 	wget -N -P  /usr/local/nginx/conf/ --no-check-certificate https://raw.githubusercontent.com/NaclFire/ss-panel-v3-mod_Uim/master/nginx.conf
 	wget -N -P /usr/local/php/etc/ --no-check-certificate https://raw.githubusercontent.com/NaclFire/ss-panel-v3-mod_Uim/master/php.ini
@@ -47,7 +46,7 @@ install_ss_panel_mod_v3(){
 	php xcat resetTraffic
 	php xcat initdownload
 	chattr +i public/.user.ini
-	yum -y install vixie-cron crontabs
+	yum -y install crontabs
 	echo '30 22 * * * php /www/wwwroot/default/xcat sendDiaryMail' >> /etc/crontab
 	echo '0 0 * * * php -n /www/wwwroot/default/xcat dailyjob' >> /etc/crontab
 	echo '*/1 * * * * php /www/wwwroot/default/xcat checkjob' >> /etc/crontab
