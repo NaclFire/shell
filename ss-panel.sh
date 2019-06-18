@@ -46,7 +46,7 @@ install_ss_panel_mod_v3(){
 	php xcat resetTraffic
 	php xcat initdownload
 	chattr +i public/.user.ini
-	yum -y install crontabs
+	#yum -y install crontabs
 	echo '30 22 * * * php /www/wwwroot/default/xcat sendDiaryMail' >> /etc/crontab
 	echo '0 0 * * * php -n /www/wwwroot/default/xcat dailyjob' >> /etc/crontab
 	echo '*/1 * * * * php /www/wwwroot/default/xcat checkjob' >> /etc/crontab
