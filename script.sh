@@ -75,16 +75,11 @@ EOF
 	php xcat resetTraffic         #重置流量
 	php xcat initdownload         #下载ssr程式
 	#创建监控
-	yum -y install vixie-cron crontabs
-	rm -rf /var/spool/cron/root
-	echo 'SHELL=/bin/bash' >> /var/spool/cron/root
-	echo 'PATH=/sbin:/bin:/usr/sbin:/usr/bin' >> /var/spool/cron/root
-	echo '*/20 * * * * /usr/sbin/ntpdate pool.ntp.org > /dev/null 2>&1' >> /var/spool/cron/root
-	echo '0 0 * * * php -n /home/wwwroot/default/xcat dailyjob' >> /var/spool/cron/root
-	echo '*/1 * * * * php /home/wwwroot/default/xcat checkjob' >> /var/spool/cron/root
-	echo "*/1 * * * * php /home/wwwroot/default/xcat syncnode" >> /var/spool/cron/root
-	echo '30 22 * * * php /home/wwwroot/default/xcat sendDiaryMail' >> /var/spool/cron/root
-	/sbin/service crond restart
+	echo '30 22 * * * php /www/wwwroot/default/xcat sendDiaryMail' >> /etc/crontab
+	echo '0 0 * * * php -n /www/wwwroot/default/xcat dailyjob' >> /etc/crontab
+	echo '*/1 * * * * php /www/wwwroot/default/xcat checkjob' >> /etc/crontab
+	echo '*/1 * * * * php /www/wwwroot/default/xcat syncnode' >> /etc/crontab
+	crontab /etc/crontab
 }
 
 
