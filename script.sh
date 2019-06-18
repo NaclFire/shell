@@ -88,9 +88,6 @@ EOF
 }
 
 
-#常规变量
-update_time="2018年11月10日21:14:00"
-config="/root/shadowsocks/userapiconfig.py"
 
 #fonts color
 Green="\033[32m" 
@@ -109,7 +106,6 @@ Notification="${Yellow}[Notification]${Font}"
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 ulimit -c 0
-rm -rf script*
 clear
 check_system
 sleep 2
