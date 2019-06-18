@@ -69,6 +69,7 @@ EOF
 	cd /home/wwwroot/default
 	#安装composer
 	wget https://getcomposer.org/installer -O composer.phar
+	php composer.phar
 	php composer.phar install
 	php xcat syncusers            #同步用户
 	php xcat initQQWry            #下载IP解析库
