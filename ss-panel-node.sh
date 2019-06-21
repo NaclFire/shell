@@ -70,6 +70,38 @@ if [[ ${is_auto} != "y" ]]; then
     	exit 0
 	fi
 fi
+if [[ ${is_auto} != "y" ]]; then
+	#Choose the connection method
+	while :; do echo
+		echo -e "Please select the way your node server connection method:"
+		echo -e "\t1. WebAPI"
+		echo -e "\t2. Remote Database"
+		read -p "Please input a number:(Default 2 press Enter) " connection_method
+		[ -z ${connection_method} ] && connection_method=2
+		if [[ ! ${connection_method} =~ ^[1-2]$ ]]; then
+			echo "Bad answer! Please only input number 1~2"
+		else
+			break
+		fi			
+	done
+	while :; do echo
+		echo -n "Do you want to enable multi user in single port feature?(Y/N)"
+		read is_mu
+		if [[ ${is_mu} != "y" && ${is_mu} != "Y" && ${is_mu} != "N" && ${is_mu} != "n" ]]; then
+			echo -n "Bad answer! Please only input number Y or N"
+		else
+			break
+		fi
+	done
+fi
+if [[ ${is_auto} != "y" ]]; then
+	echo -n "Please enter WebAPI url:"
+	read webapi_url
+	echo -n "Please enter WebAPI token:"
+	read webapi_token
+	echo -n "Server node ID:"
+	read node_id
+fi
 echo "Updatin exsit package..."
 yum clean all && rm -rf /var/cache/yum && yum update -y
 echo "Install necessary package..."
@@ -119,30 +151,6 @@ pip install -r requirements.txt
 echo "Generating config file..."
 cp apiconfig.py userapiconfig.py
 cp config.json user-config.json
-if [[ ${is_auto} != "y" ]]; then
-	#Choose the connection method
-	while :; do echo
-		echo -e "Please select the way your node server connection method:"
-		echo -e "\t1. WebAPI"
-		echo -e "\t2. Remote Database"
-		read -p "Please input a number:(Default 2 press Enter) " connection_method
-		[ -z ${connection_method} ] && connection_method=2
-		if [[ ! ${connection_method} =~ ^[1-2]$ ]]; then
-			echo "Bad answer! Please only input number 1~2"
-		else
-			break
-		fi			
-	done
-	while :; do echo
-		echo -n "Do you want to enable multi user in single port feature?(Y/N)"
-		read is_mu
-		if [[ ${is_mu} != "y" && ${is_mu} != "Y" && ${is_mu} != "N" && ${is_mu} != "n" ]]; then
-			echo -n "Bad answer! Please only input number Y or N"
-		else
-			break
-		fi
-	done
-fi
 do_mu(){
 	if [[ ${is_auto} != "y" ]]; then
 		echo -n "Please enter MU_SUFFIX:"
@@ -154,14 +162,6 @@ do_mu(){
 	sed -i -e "s/MU_SUFFIX = 'zhaoj.in'/MU_SUFFIX = '${mu_suffix}'/g" -e "s/MU_REGEX = '%5m%id.%suffix'/MU_REGEX = '${mu_regex}'/g" userapiconfig.py
 }
 do_modwebapi(){
-	if [[ ${is_auto} != "y" ]]; then
-		echo -n "Please enter WebAPI url:"
-		read webapi_url
-		echo -n "Please enter WebAPI token:"
-		read webapi_token
-		echo -n "Server node ID:"
-		read node_id
-	fi
 	if [[ ${is_mu} == "y" || ${is_mu} == "Y" ]]; then
 		do_mu
 	fi
@@ -196,72 +196,11 @@ if [[ ${is_auto} != "y" ]]; then
 		do_glzjinmod
 	fi
 fi
-do_bbr(){
-	echo "Running system optimization and enable BBR..."
-	rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
-	rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
-	yum remove kernel-headers -y
-	yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-headers -y
-	grub2-set-default 0
-	echo "tcp_bbr" >> /etc/modules-load.d/modules.conf
-	cat >> /etc/security/limits.conf << EOF
-	* soft nofile 51200
-	* hard nofile 51200
-EOF
-	ulimit -n 51200
-	cat >> /etc/sysctl.conf << EOF
-	fs.file-max = 51200
-	net.core.default_qdisc = fq
-	net.core.rmem_max = 67108864
-	net.core.wmem_max = 67108864
-	net.core.netdev_max_backlog = 250000
-	net.core.somaxconn = 4096
-	net.ipv4.tcp_congestion_control = bbr
-	net.ipv4.tcp_syncookies = 1
-	net.ipv4.tcp_tw_reuse = 1
-	net.ipv4.tcp_fin_timeout = 30
-	net.ipv4.tcp_keepalive_time = 1200
-	net.ipv4.ip_local_port_range = 10000 65000
-	net.ipv4.tcp_max_syn_backlog = 8192
-	net.ipv4.tcp_max_tw_buckets = 5000
-	net.ipv4.tcp_fastopen = 3
-	net.ipv4.tcp_rmem = 4096 87380 67108864
-	net.ipv4.tcp_wmem = 4096 65536 67108864
-	net.ipv4.tcp_mtu_probing = 1
-EOF
-	sysctl -p
-}
-do_service(){
-	echo "Writting system config..."
-	wget https://raw.githubusercontent.com/SuicidalCat/Airport-toolkit/master/ssr_node.service
-	chmod 754 ssr_node.service && mv ssr_node.service /usr/lib/systemd/system
-	echo "Starting SSR Node Service..."
-	systemctl enable ssr_node && systemctl start ssr_node
-}
-while :; do echo
-	echo -n "Do you want to enable BBR feature(from mainline kernel) and optimizate the system?(Y/N)"
-	read is_bbr
-	if [[ ${is_bbr} != "y" && ${is_bbr} != "Y" && ${is_bbr} != "N" && ${is_bbr} != "n" ]]; then
-		echo -n "Bad answer! Please only input number Y or N"
-	else
-		break
-	fi
-done
-while :; do echo
-	echo -n "Do you want to register SSR Node as system service?(Y/N)"
-	read is_service
-	if [[ ${is_service} != "y" && ${is_service} != "Y" && ${is_service} != "N" && ${is_service} != "n" ]]; then
-		echo -n "Bad answer! Please only input number Y or N"
-	else
-		break
-	fi
-done
-if [[ ${is_bbr} == "y" || ${is_bbr} == "Y" ]]; then
-	do_bbr
-fi
-if [[ ${is_service} == "y" || ${is_service} == "Y" ]]; then
-	do_service
-fi
+echo "Writting system config..."
+wget https://raw.githubusercontent.com/SuicidalCat/Airport-toolkit/master/ssr_node.service
+chmod 754 ssr_node.service && mv ssr_node.service /usr/lib/systemd/system
+echo "Starting SSR Node Service..."
+systemctl enable ssr_node && systemctl start ssr_node
 echo "System require a reboot to complete the installation process, press Y to continue, or press any key else to exit this script."
 read is_reboot
 if [[ ${is_reboot} == "y" || ${is_reboot} == "Y" ]]; then
